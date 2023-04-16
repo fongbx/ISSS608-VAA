@@ -82,7 +82,7 @@ ggplot(data=exam_data,
        aes(x=MATHS))
 ```
 
-`ggplot` includes the x-axis and the axis\'s label.
+`ggplot` includes the x-axis and the axis's label.
 
 ## Essential Grammatical Elements in ggplot2: geom
 
@@ -204,7 +204,7 @@ ggplot(data=exam_data,
 
 ### Geometric Objects: geom_boxplot()
 
-`geom_boxplot()` displays continuous value list. It visualises five summary statistics (the median, two hinges and two whiskers), and all \"outlying\" points individually.
+`geom_boxplot()` displays continuous value list. It visualises five summary statistics (the median, two hinges and two whiskers), and all "outlying" points individually.
 
 ```{r}
 ggplot(data=exam_data,
@@ -226,7 +226,7 @@ ggplot(data=exam_data,
 
 ### Geometric Objects: geom_violin()
 
-`geom_violin` is designed for creating violin plot. Violin plots are a way of comparing multiple data distributions. With ordinary density curves, it is difficult to compare more than just a few distributions because the lines visually interfere with each other. With a violin plot, it\'s easier to compare several distributions since they\'re placed side by side.
+`geom_violin` is designed for creating violin plot. Violin plots are a way of comparing multiple data distributions. With ordinary density curves, it is difficult to compare more than just a few distributions because the lines visually interfere with each other. With a violin plot, it's easier to compare several distributions since they're placed side by side.
 
 ```{r}
 ggplot(data=exam_data,
@@ -356,7 +356,7 @@ Facetting generates small multiples (sometimes also called trellis plot), each d
 
 `facet_wrap` wraps a 1d sequence of panels into 2d. The default will display the panels in a grid shape (in this case 3x3) but we can pass in the arguments of `nrow` and `ncol` for customisation. This is generally a better use of screen space than facet_grid because most displays are roughly rectangular.
 
-Note that facet_wrap() function will only produce plots for the combinations of variables that have values, which means it won\'t produce any empty plots.
+Note that facet_wrap() function will only produce plots for the combinations of variables that have values, which means it won't produce any empty plots.
 
 ```{r}
 ggplot(data=exam_data,
@@ -496,28 +496,6 @@ ggplot(data=exam_data,
 
 -   [Learning ggplot2 on Paper -- Scale](https://henrywang.nl/tag/learning-ggplot2-on-paper/)
 
-
-
 ### 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ### 
-
-
-
-
-
-
