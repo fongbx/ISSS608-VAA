@@ -26,6 +26,7 @@ format:
 
 execute:
   freeze: auto
+  warning: false
 
 editor: visual
 
