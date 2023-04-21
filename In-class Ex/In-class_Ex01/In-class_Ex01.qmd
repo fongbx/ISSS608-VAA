@@ -76,9 +76,7 @@ ggplot(data=exam_data, aes(x=RACE)) +
 In the original chart, there are the following issues:
 
 -   y-axis label is not clear (i.e., count)
-
 -   To support effective comparison, the bars should be sorted by their respective frequency
-
 -   For static graph, frequency values should be added to provide additional information
 
 ```{r}
@@ -160,8 +158,7 @@ ggplot(data=exam_data,
 We will improve the design with the following:
 
 -   Adding mean and median lines on the histogram plot
-
-Change fill colour and line colour
+-   Change fill colour and line colour
 
 ```{r}
 ggplot(data=exam_data,
@@ -223,7 +220,6 @@ ggplot(data=exam_data, aes(x=MATHS, y=ENGLISH)) +
 We will improve the design with the following:
 
 -   Changing to equal axis
-
 -   Including guides to inform where the passing grades are
 
 ```{r}

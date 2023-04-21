@@ -1,28 +1,41 @@
 project:
   type: website
-
+  
 website:
+  page-navigation: true
   title: "ISSS608 Visual Analytics and Applications"
-  navbar:
-    left:
-    - text: "Hands-on Exercise"
-      menu: 
-        - text: "Hands-on Exercise 1"
-          href: "Hands-on Ex/Hands-on_Ex01/Hands-on_Ex01.html"
-    - text: "In-class Exercise"
-      menu: 
-        - text: "In-class Exercise 1"
-          href: "In-class Ex/In-class_Ex01/In-class_Ex01.html"
-    right:
-      - href: index.qmd
-        text: Home
-      - about.qmd
+  site-url: "https://isss608-vaa-fongbx.netlify.app/"
+  
+  sidebar: 
+    style: "docked"
+    background: "#1C6758"
+    pinned: true
+    align: center
+    tools: 
+      - icon: github
+        href: https://github.com/fongbx
+    search: true
+    collapse-level: 1
+    contents:
+      - section: "Hands-on Exercise"
+        contents: 
+          - text: "Hands-on Exercise 1"
+            href: "Hands-on Ex/Hands-on_Ex01/Hands-on_Ex01.html"
+          - text: "Hands-on Exercise 2"
+            href: "Hands-on Ex/Hands-on_Ex02/Hands-on_Ex02.html"
+      - text: "---"
+      - section: "In-Class Exercise"
+        contents: 
+          - text: "In-class Exercise 1"
+            href: "In-class Ex/In-class_Ex01/In-class_Ex01.html"
 
 format:
   html:
-    theme: flatly
+    theme: default
+    smooth-scroll: true
     css: styles.css
     toc: true
+    number-sections: true
 
 execute:
   freeze: auto
