@@ -12,19 +12,23 @@ In this exercise, we will learn to make further customisations to charts in ggpl
 
 ## Install and Launch R packages
 
-In this exercise, besides tidyverse, four other R packages will be used. They are:
+In this exercise, besides tidyverse, we will also explore other R packages as follows:
 
--   ggrepel: provides geoms for ggplot2 to repel overlapping text labels
--   ggthemes: provides some extra themes, geoms, and scales for 'ggplot2'
--   hrbrthemes: provides typography-centric themes and theme components for ggplot2
--   patchwork: for preparing composite figures
--   cowplot: for preparing publication-quality composite figures
--   gridExtra: for combining multiple figures
+-   For annotations and highlighting:
+    -   ggrepel: provides geoms for ggplot2 to repel overlapping text labels
+    -   gghighlight:
+-   For themes:
+    -   ggthemes: provides some extra themes, geoms, and scales for 'ggplot2'
+    -   hrbrthemes: provides typography-centric themes and theme components for ggplot2
+-   For multiple charts:
+    -   patchwork: for preparing composite figures
+    -   cowplot: for preparing publication-quality composite figures
+    -   gridExtra: for combining multiple figures
 
 The code chunk below will be used to check if these packages have been installed and to load them into our working R environment.
 
 ```{r}
-pacman:: p_load(tidyverse, ggrepel, ggthemes, hrbrthemes, patchwork, cowplot, gridExtra)
+pacman:: p_load(tidyverse, ggrepel, gghighlight, ggthemes, hrbrthemes, patchwork, cowplot, gridExtra)
 ```
 
 ## Import Data
@@ -42,7 +46,7 @@ There are a total of seven attributes in the exam_data tibble data frame. Four o
 
 # Advanced customisation to ggplot2
 
-## Annotations
+## Annotations and Highlights
 
 ### Using geom_text() and geom_label()
 
@@ -125,8 +129,56 @@ ggplot(data=exam_data, aes(x=MATHS, y=ENGLISH)) +
   geom_label_repel(data=exam_data_to_label, aes(label=ID),
                    fontface='bold', max.overlaps=Inf) +
   geom_point(data=exam_data_to_label, colour='red') +
-  ggtitle("English scores vs Maths scores for Primary 3");
+  ggtitle("English scores vs Maths scores for Primary 3")
 ```
+
+### Using gghighlight: highlight areas in our plot
+
+With [gghighlight](https://yutannihilation.github.io/gghighlight/articles/gghighlight.html), we can simply add the `gghighlight()` function to our plot with the conditions set to identify our subset.
+
+The following code chunk shows a similar plot to the above but without the need to filter out and plot the data we wish to highlight separately.
+
+```{r}
+ggplot(data=exam_data, aes(x=MATHS, y=ENGLISH)) +
+  geom_point(colour = 'darkred', alpha=0.8) +
+  gghighlight(MATHS > 90 & ENGLISH > 90,
+              unhighlighted_colour = alpha("grey", 0.4),
+              use_direct_label = T,
+              label_key = ID,
+              label_params = list(size = 4)) +
+  coord_cartesian(xlim=c(0,100), ylim=c(0,100)) +
+  ggtitle("English scores vs Maths scores for Primary 3")
+```
+
+The following is an example of gghighlight on bar charts.
+
+```{r}
+exam_data %>%
+  group_by(RACE) %>% 
+  summarise(avgmaths = round(mean(MATHS, na.rm=T),1)) %>% 
+  ggplot(aes(x=RACE, y=avgmaths)) +
+  geom_bar(stat="identity", fill="darkred") +
+  geom_text(aes(label=avgmaths), vjust=-0.4) +
+  gghighlight(RACE=="Others") +
+  coord_cartesian(ylim=c(0, 100)) +
+  ggtitle("Highlight with labels for all categories")
+```
+
+In the above plot, the labels appear for all categories. We can choose to hide text that we do not wish to highlight by moving geom_text() function after the gghighlight() function.
+
+```{r}
+exam_data %>%
+  group_by(RACE) %>% 
+  summarise(avgmaths = round(mean(MATHS, na.rm=T),1)) %>% 
+  ggplot(aes(x=RACE, y=avgmaths)) +
+  geom_bar(stat="identity", fill="darkred") +
+  gghighlight(RACE=="Others") +
+  geom_text(aes(label=avgmaths), vjust=-0.4) +
+  coord_cartesian(ylim=c(0, 100)) +
+  ggtitle("Highlight with labels for highlighted category")
+```
+
+For more examples on gghighlight, refer [here](https://anhhoangduc.com/post/review-gghighlight/).
 
 ## Themes
 
