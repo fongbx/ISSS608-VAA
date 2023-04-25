@@ -33,7 +33,7 @@ pacman:: p_load(tidyverse, ggrepel, gghighlight, ggthemes, hrbrthemes, patchwork
 
 ## Import Data
 
-We will import `Exan_data.csv` into the R environment using `read_csv()` function of `readr` package. The dataset comprises of year end examination grades of a cohort of Primary 3 students.
+We will import `Exam_data.csv` into the R environment using `read_csv()` function of `readr` package. The dataset comprises of year end examination grades of a cohort of Primary 3 students.
 
 ```{r}
 exam_data <- read_csv("data/Exam_data.csv")
