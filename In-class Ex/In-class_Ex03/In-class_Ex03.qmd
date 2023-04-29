@@ -1,0 +1,6 @@
+---
+title: "In-Class Exercise 3"
+author: "Fong Bao Xian"
+editor: visual
+date: "29 April 2023"
+---
