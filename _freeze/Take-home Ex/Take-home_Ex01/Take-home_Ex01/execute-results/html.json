@@ -1,0 +1,14 @@
+{
+  "hash": "410f297a618cb8c4abee4a8f95157510",
+  "result": {
+    "markdown": "---\ntitle: \"Take-home Exercise 1\"\nauthor: \"Fong Bao Xian\"\ndate: \"6 May 2023\"\ndate-modified: \"2023-05-06\"\n---\n\n\n## Data Cleaning\n\n-   Take hint from the data format mentioned in the exercise document. For education level, should change to factor and change the level\n\n-   FinancialJournal - change the diff categories of income/expenses into individual columns - use pivoting / extract year_month from date\n\n    -   Must be able to apply appropriate data wrangling methods to derive analytics\\\n        table at participant level\n\n    -   Encode all expenses into positive\n\n    -   Must be able to flag out 131 participants which are potentially no longer resident\\\n        in the city.\n\n    -   Must be able to flag potential anomalous wages on 1st March 2018\n\n-   Take note whether got duplicates / spelling errors?\n\nPlotting\n\n-   When plotting out, good to include more comments in code chunk to explain\n\n-   When we want to show normality, instead of showing statistical results, need to see how to present in charts (qqplot) + statistical results beside\n\n-   When we use ggstatsplot, remember to set.seed else will always get different results\n\n-   In real-life we always assume we do not know the population variance, so will use unequal variance (ggbetweenplot default equal var already set to False so no need to adjust)\n\n-   First do normality test, if not normal then we use non-parametric, and the centrality measure is median\n\n-   Don't have to generate too many plots/analyses. Focus on some areas.\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

@@ -27,13 +27,20 @@ website:
             href: "Hands-on Ex/Hands-on_Ex03A/Hands-on_Ex03A.html"
           - text: "Hands-on Exercise 3B"
             href: "Hands-on Ex/Hands-on_Ex03B/Hands-on_Ex03B.html"
-          - text: "Hands-on Exercise 4"
-            href: "Hands-on Ex/Hands-on_Ex04/Hands-on_Ex04.html"
+          - text: "Hands-on Exercise 4A"
+            href: "Hands-on Ex/Hands-on_Ex04/Hands-on_Ex04A.html"
       - text: "---"
       - section: "In-Class Exercise"
         contents: 
           - text: "In-class Exercise 1"
             href: "In-class Ex/In-class_Ex01/In-class_Ex01.html"
+          - text: "In-class Exercise 4"
+            href: "In-class Ex/In-class_Ex04/In-class_Ex04.html"
+      - text: "---"
+      - section: "Take-home Exercise"
+        contents: 
+          - text: "Take-home Exercise 1"
+            href: "Take-home Ex/Take-home_Ex01/Take-home_Ex01.html"      
 
 format:
   html:
@@ -43,6 +50,9 @@ format:
     toc: true
     toc-expand: 2
     number-sections: true
+    code-tools: true
+    code-fold: true
+    code-summary: "Show code"
 
 execute:
   freeze: auto
