@@ -1,38 +1,120 @@
 ---
 title: "Take-home Exercise 1"
+subtitle: "Visual Analysis on the City of Engagement"
 author: "Fong Bao Xian"
 date: "6 May 2023"
 date-modified: "`r Sys.Date()`"
 ---
 
-## Data Cleaning
+# Overview
 
--   Take hint from the data format mentioned in the exercise document. For education level, should change to factor and change the level
+The objective of this exercise is to reveal the demographic and financial characteristics of the City of Engagement. Using appropriate analytical visualisations, the exercise aims to help city managers and planners of the City of Engagement explore the data for their usage.
 
--   FinancialJournal - change the diff categories of income/expenses into individual columns - use pivoting / extract year_month from date
+The datasets used are the following:
 
-    -   Must be able to apply appropriate data wrangling methods to derive analytics\
-        table at participant level
+-   **Participants.csv** - contains dempgraphic information about the residents
+-   **FinancialJournal.csv** - contains information about financial transactions
 
-    -   Encode all expenses into positive
+# Getting Started
 
-    -   Must be able to flag out 131 participants which are potentially no longer resident\
-        in the city.
+## Import R Packages
 
-    -   Must be able to flag potential anomalous wages on 1st March 2018
+For this exercise, we will be using the following packages:
 
--   Take note whether got duplicates / spelling errors?
+-   `tidyverse` - a collection of packages for data science and analysis, including packages for data import, wrangling and visualisation
+-   `lubridate` - for working with dates and timestamp
+-   `ggstatsplot` -
+-   `plotly`
 
-Plotting
+We will use `pacman::p_load` to install (if the packages are not yet installed) and load the packages into the R environment in a single command.
 
--   When plotting out, good to include more comments in code chunk to explain
+```{r}
+pacman::p_load(tidyverse, lubridate, zoo, ggstatsplot, plotly)
+```
 
--   When we want to show normality, instead of showing statistical results, need to see how to present in charts (qqplot) + statistical results beside
+## Import Data
 
--   When we use ggstatsplot, remember to set.seed else will always get different results
+We will read in the two datasets using `read_csv()` function from the `readr` package and store them as tibbles. A tibble is a modern, tidy data frame format in R which is designed to work better with the tidyverse package.
 
--   In real-life we always assume we do not know the population variance, so will use unequal variance (ggbetweenplot default equal var already set to False so no need to adjust)
+```{r}
+participants <- read_csv("data/Participants.csv")
+financial <- read_csv("data/FinancialJournal.csv")
+```
 
--   First do normality test, if not normal then we use non-parametric, and the centrality measure is median
+# Data Preparation
 
--   Don't have to generate too many plots/analyses. Focus on some areas.
+## Change to appropriate data format
+
+We will first convert the variables into appropriate data format:
+
+-   **Participants** dataset:
+    -   Convert ***householdSize*** from numerical to factor using `factor()` as there are only three categories
+    -   Convert ***educationalLevel*** and ***interestGroup*** from character to factor using `factor()` and setting the level as necessary using the level argument
+-   **FinancialJournal** dataset:
+    -   Convert ***category*** from character to factor using `factor()`
+
+```{r}
+# Convert householdSize, educationalLevel and interestGroup to factor
+participants$householdSize <- factor(participants$householdSize)
+participants$educationLevel <- factor(participants$educationLevel, levels = c("Low", "HighSchoolOrCollege", "Bachelors", "Graduate"))
+participants$interestGroup <- factor(participants$interestGroup)
+
+# Convert category to factor
+financial$category <- factor(financial$category)
+```
+
+## Extract year month from timestamp
+
+From the ***timestamp*** variable in the **FinancialJournal** dataset, we will also extract the relevant year and month information using `as.yearmon()` from `zoo` package.
+
+```{r}
+# Extract year and month
+financial$yearmonth <- as.yearmon(financial$timestamp)
+```
+
+## Remove duplicates in data
+
+Checking for duplicates using `duplicated()`, we find that there are 1,113 duplicated rows in the **FinancialJournal** dataset. Taking a glimpse into the duplicated rows, we see that for some of the participants, their monthly shelter and education expenses have been duplicated for the same timestamp.
+
+```{r}
+# Check for duplicates in records
+dup_rows <- duplicated(financial)
+sum(dup_rows)
+```
+
+```{r}
+# Taking a look at all the duplicated rows
+head(financial[dup_rows, ])
+```
+
+We will remove the duplicates using `distinct()` from the dplyr package to keep only the unique data.
+
+```{r}
+financial <- distinct(financial)
+```
+
+## Aggregating financial data of participants
+
+Currently, the financial data is in long format, with **participantId** repeated across the rows for each timestamp and category of financial transaction. For more meaningful analysis of the financial data by participants, we will prepare the data as follows:
+
+-   Aggregate the total amount for each category of financial transaction for each yearmonth for each participant using `group_by()`
+-   Narrow down to the necessary columns using `select()`
+-   Convert the data from long to wide format using `pivot_wider()` to pivot the data frame so that the **categor**y column becomes the names of the new columns, the **amount** column becomes the values in those columns, and the values are summed up for each **participantId** and **yearmonth** combination
+-   Replace all NA values with 0 using `replace(is.na(.), 0)`
+-   Compute a new variable **AdjustedShelter** to offset the Shelter expenses with the RentAdjustments (considered as relief received in relation to Shelter expenses) using `mutate()`
+-   Compute a new variable **ExcessFunds** using all the income less expenses to facilitate analysis of a participant's excess funds using `mutate()`
+-   Change all expense category (including Education, Food, Recreation and AdjustedShelter) to positive amounts for easier analysis and visualisation using `mutate(across())` the columns and applying the function to multiply with -1
+
+```{r}
+financial_updated <- financial %>%
+  group_by(participantId, yearmonth) %>%
+  select(participantId, yearmonth, category, amount) %>% 
+  pivot_wider(names_from = category,
+              values_from = amount,
+              values_fn = sum) %>% 
+  replace(is.na(.), 0) %>%
+  mutate(AdjustedShelter = Shelter + RentAdjustment) %>% 
+  mutate(ExcessFunds = Wage + Education + Food + Recreation + AdjustedShelter) %>% 
+  mutate(across(c(Education, Food, Recreation, AdjustedShelter), function(x) x*-1)) %>% 
+  select(participantId, yearmonth, Wage, Education, Food, Recreation, AdjustedShelter, ExcessFunds)
+```
