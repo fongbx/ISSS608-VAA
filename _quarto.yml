@@ -50,9 +50,6 @@ format:
     toc: true
     toc-expand: 2
     number-sections: true
-    code-tools: true
-    code-fold: true
-    code-summary: "Show code"
 
 execute:
   freeze: auto
