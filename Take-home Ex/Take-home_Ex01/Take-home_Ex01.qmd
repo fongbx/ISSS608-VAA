@@ -213,8 +213,8 @@ First, we will have an overview understanding of the demographics of residents i
 ```{r}
 #| code-fold: true
 #| code-summary: "Show code"
-#| fig-width: 8
-#| fig-height: 9
+#| fig-width: 7
+#| fig-height: 8
 
 # Plot age
 age <- ggplot(data = combined, aes(x = age_groups,
@@ -296,8 +296,6 @@ patch_plt1 + patchwork::plot_layout(guides = "collect") +
     patchwork::plot_annotation(title = "Demographics in the City of Engagement", 
                     theme = theme(plot.title = element_text(hjust = 0.5,
                                                             size = 18)))
-
-# things to add: overall heading, fix proportion, fix theme, add overall figure of how many residents there are
 ```
 
 ::: callout-note
@@ -338,17 +336,18 @@ patch_plt2 + patchwork::plot_layout(heights = c(1,3),
     patchwork::plot_annotation(title = "Distribution of Income in City of Engagement", 
                     theme = theme(plot.title = element_text(hjust = 0.5,
                                                             size = 18)))
-
-# things to add: annotate the mean/median, add vertical line, change colour and theme
 ```
 
 ::: callout-note
 ## Key Observations
 
--   The income distribution is positively-skewed, with a right tail. This means that ---
+-   The income distribution is positively-skewed, with a right tail. This tells us that the majority of the population has lower income, with fewer individuals earning higher incomes.
+-   The presence of outliers on the right also indicate that there are some extreme high-income earners that are relatively rare in the population.
 :::
 
-We will further plot the Lorenz curve below, which is a more mathematical graphical representation of the spread of income over a population. At any point in the curve, we can find a cumulative percentage of the population and see how much of the cumulative share of income they hold. The shaded area between the Lorenz curve and the straight diagonal line, which represents perfect equality in income distribution, is the Gini Coefficient. A Gini Coefficient of 0 represents perfect equality and 1 represents highest inequality.
+We will further plot the Lorenz curve below, which is a more mathematical graphical representation of the spread of income over a population. At any point in the curve, we can find a cumulative percentage of the population and see how much of the cumulative share of income they hold.
+
+The shaded area between the Lorenz curve and the straight diagonal line, which represents perfect equality in income distribution, is the Gini Coefficient. A Gini Coefficient of 0 represents perfect equality and 1 represents highest inequality.
 
 ```{r}
 #| code-fold: true
@@ -376,12 +375,12 @@ In the City of Engagement, the Lorenz curve deviates slightly from the straight 
 
 ## Distribution of Income and Expenses among different Demographic Profiles
 
-We now want to drill in further to understand how Income and the different Expense categories differ by the different Demographic Profiles. For such exploration, an interactive plot would be useful.
+We now want to drill in further to understand how income and the different expense categories differ by the different demographic profiles. For such exploration, an interactive plot would be useful.
 
 ::: callout-tip
 ## Interactive Chart
 
--   Select from the dropdown menu to change the x-axis and y-axis
+-   Select from the dropdown menus to change the variables on the x-axis and y-axis
 -   Hover over the charts to view the key statistics
 :::
 
@@ -472,7 +471,7 @@ plot_ly(data = combined,
 ::: callout-note
 ## Key Observations
 
--   Income seems to differ across residents of different education levels. Particularly, the income of residents with Graduate degree seem to be the highest, followed by residents with Bachelors degree. Income of residents with education level of Low or High School or College seem to be around the same range.
+-   Income seems to differ across residents of different education levels. Particularly, the income of residents with Graduate degree seem to be the highest, followed by residents with Bachelors degree, then residents with Low or High School or College.
 -   For residents who have kids and have higher household sizes, the expenses that seem to make a difference are education and shelter expenses. Particularly, it is noted that only residents who have kids (and hence household size 3) bear the costs of education expenses. Shelter expenses also seem to be higher for residents who have kids and with bigger household sizes.
 :::
 
@@ -480,7 +479,7 @@ plot_ly(data = combined,
 
 We want to confirm our hypothesis of whether Income differs by Education Level and test the following hypothesis:
 
-> H0: Mean of income is equal across education levels
+> H0: Median of income is equal across education levels
 >
 > H1: Not all means are equal
 
@@ -538,15 +537,17 @@ ggbetweenstats(
 ::: callout-note
 ## Key Observations
 
--   
+As the p-value from the Kruskal-Wallis one-way ANOVA test is less than our level of significance of 0.05, we reject the null hypothesis that the median income is equal across all education levels. Pairwise test further confirmed that median income differs between all pairs of education levels, with Graduates having the highest median income, followed by Bachelors, High School or College, then the residents with Low education level.
+
+With this information, the city managers may be able to provide more targeted assistance or grants to the group of residents with High School or College or Low education level.
 :::
 
 ### Statistical Test: Does Shelter Expense differ by Household Size?
 
 Next, we want to confirm whether shelter expenses differ by household size and test the following hypothesis.
 
-> H0: Mean of shelter expense is equal across household sizes
-
+> H0: Median of shelter expense is equal across household sizes
+>
 > H1: Not all means are equal
 
 Similarly, we will check the normality of the shelter expense distribution by household size by plotting the Q-Q Plots and performing the Shapiro-Wilk Normality Test. As the p-values from the Normality Test are less than our level of significance of 0.05, we reject the null hypothesis that the distributions are normally distributed.
@@ -602,40 +603,15 @@ ggbetweenstats(
 
 ::: callout-note
 ## Key Observations
+
+As the p-value from the Kruskal-Wallis one-way ANOVA test is less than our level of significance of 0.05, we reject the null hypothesis that the median shelter expense is equal across all household sizes. Pairwise test further confirmed that median shelter expenses differs between all pairs of household sizes, with residents having household size 2 having the highest median shelter expense, followed by household size 3, then household size 1.
+
+Together with the earlier observation from the interactive boxplots that only residents who have kids (and hence household size 3) bear the costs of education expenses, the city managers may consider more reliefs on education and shelter expenses for families who have kids and bigger household sizes. This is especially considering that only about 28% of the population have kids and such reliefs could help to reduce some of the expense burden for families who wish to have kids.
 :::
 
 ## Income vs Expenses over time
 
 Last but not least, we also want to understand how the residents' income and expenses have changed over time and whether there is any concern of cost inflation without commensurate increase in wages. We can visualise this through ---
-
-```{r}
-financial_yearmth
-```
-
-```{r}
-combined2 <- participants %>% inner_join(financial_yearmth, by = "participantId")
-combined2$yearmonth <- as.Date(combined2$yearmonth, format='01 %m %Y')
-
-ggplot(data = combined2,
-       aes(x = AdjustedShelter, y = householdSize, fill = after_stat(x))) +
-  
-  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
-  
-  theme_minimal() +
-    
-  labs(title = 'Resale Prices by Planning Area: {frame_time}') +
-  transition_time(financial_yearmth$yearmonth) +
-  
-  theme(legend.position="none",
-  text = element_text(family = "Garamond"),
-  plot.title = element_text(face = "bold", size = 12),
-  
-  axis.title.x = element_text(size = 10, hjust = 1),
-  axis.title.y = element_text(size = 10, angle = 360),
-  axis.text = element_text(size = 8)) +
-
-  ease_aes('linear')
-```
 
 # References
 

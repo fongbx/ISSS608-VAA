@@ -177,7 +177,7 @@ bscols(widths = c(4,8),
 
 -   [**ggdist**](https://mjskay.github.io/ggdist/) is an R package that provides a flexible set of ggplot2 geoms and stats designed especially for visualising distributions and uncertainty.
 -   It is designed for both frequentist and Bayesian uncertainty visualization, taking the view that uncertainty visualization can be unified through the perspective of distribution visualization:
-    -   for frequentist models, one visualises confidence distributions or bootstrap distributions (see vignette(\"freq-uncertainty-vis\"));
+    -   for frequentist models, one visualises confidence distributions or bootstrap distributions (see vignette("freq-uncertainty-vis"));
 
     -   for Bayesian models, one visualises probability distributions (see the tidybayes package, which builds on top of ggdist)
 
