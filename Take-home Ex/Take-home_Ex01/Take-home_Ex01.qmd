@@ -30,7 +30,7 @@ For this exercise, we will be using the following packages:
 We will use `pacman::p_load` to install (if the packages are not yet installed) and load the packages into the R environment in a single command.
 
 ```{r}
-pacman::p_load(tidyverse, lubridate, zoo, ggstatsplot, plotly, crosstalk, gglorenz, DescTools, wesanderson)
+pacman::p_load(tidyverse, lubridate, zoo, ggstatsplot, plotly, crosstalk, gglorenz, DescTools, wesanderson, rstatix, webshot2, png, gt, ggridges, gganimate)
 ```
 
 ## Import Data
@@ -64,6 +64,21 @@ participants$interestGroup <- factor(participants$interestGroup)
 financial$category <- factor(financial$category)
 ```
 
+## Bin age into age_groups
+
+The ***age*** variable is currently in continuous format. We will bin them into ***age_groups*** using `cut()` function to facilitate subsequent analysis.
+
+```{r}
+participants <- participants %>% 
+  mutate(age_groups = cut(age, breaks = c(18,30,40,50,60), include.lowest = TRUE))
+```
+
+We can take a look at the distribution of the age_groups in the following:
+
+```{r}
+table(participants$age_groups)
+```
+
 ## Extract year month from timestamp
 
 From the ***timestamp*** variable in the **FinancialJournal** dataset, we will also extract the relevant year and month information using `as.yearmon()` from `zoo` package.
@@ -88,7 +103,7 @@ sum(dup_rows)
 head(financial[dup_rows, ])
 ```
 
-We will remove the duplicates using `distinct()` from the dplyr package to keep only the unique data.
+We will remove the duplicates using `distinct()` from the `dplyr` package to keep only the unique data.
 
 ```{r}
 financial <- distinct(financial)
@@ -198,11 +213,12 @@ First, we will have an overview understanding of the demographics of residents i
 ```{r}
 #| code-fold: true
 #| code-summary: "Show code"
-#| fig-width: 6
+#| fig-width: 8
 #| fig-height: 9
 
-# Plot haveKids
-kids <- ggplot(data = combined, aes(x = haveKids, fill = haveKids)) +
+# Plot age
+age <- ggplot(data = combined, aes(x = age_groups,
+                                         fill = age_groups)) +
   geom_bar() +
   geom_text(
     aes(label = scales::percent(after_stat(prop)), group = 1),
@@ -212,7 +228,7 @@ kids <- ggplot(data = combined, aes(x = haveKids, fill = haveKids)) +
         axis.text.y = element_blank(),
         axis.title = element_blank(),
         legend.position = "none") +
-  ggtitle("Proportion Having Kids") +
+  ggtitle("Proportion by Age Groups") +
   scale_fill_manual(values = wes_palette("Chevalier1"))
   
 # Plot householdSize
@@ -245,6 +261,20 @@ education <- ggplot(data = combined, aes(x = educationLevel,
   ggtitle("Proportion by Education Level") +
   scale_fill_manual(values = wes_palette("Chevalier1"))
 
+# Plot haveKids
+kids <- ggplot(data = combined, aes(x = haveKids, fill = haveKids)) +
+  geom_bar() +
+  geom_text(
+    aes(label = scales::percent(after_stat(prop)), group = 1),
+    stat = "count",
+    vjust = 1.5) +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title = element_blank(),
+        legend.position = "none") +
+  ggtitle("Proportion Having Kids") +
+  scale_fill_manual(values = wes_palette("Chevalier1"))
+
 # Plot interestGroups
 interest <- ggplot(data = combined, aes(x = interestGroup,
                                         fill = interestGroup)) +
@@ -261,7 +291,7 @@ interest <- ggplot(data = combined, aes(x = interestGroup,
   scale_fill_manual(values = wes_palette("Chevalier1", 10, type = "continuous"))
 
 # Combine plots
-patch_plt1 <- (kids + household) / education / interest
+patch_plt1 <- (age + household) / (education + kids) / interest
 patch_plt1 + patchwork::plot_layout(guides = "collect") +
     patchwork::plot_annotation(title = "Demographics in the City of Engagement", 
                     theme = theme(plot.title = element_text(hjust = 0.5,
@@ -273,15 +303,14 @@ patch_plt1 + patchwork::plot_layout(guides = "collect") +
 ::: callout-note
 ## Key Observations
 
--   A large proportion of the residents (72%) do not have children.
+-   Participants of the survey range between 18 and 60 years old. The spread of residents among the age groups are fairly even.
 -   The proportion of household sizes are fairly even between 1 and 3. Household sizes in the City of Engagement are relatively small since the maximum household size is 3.
 -   The majority of the residents have education level of at least High School or College and above.
+-   A large proportion of the residents (72%) do not have children.
 -   The proportion across the various interest groups are fairly even.
 :::
 
-## Financial Status of the Residents
-
-### Distribution of Income in the Population
+## Distribution of Income in the Population
 
 Next, we also want to understand the income distribution among the residents in the City of Engagement. We do so by plotting the histogram and boxplot of the income of all participants.
 
@@ -305,7 +334,10 @@ plt_hist <- ggplot(data = combined, aes(x = Wage)) +
 
 patch_plt2 <- plt_box / plt_hist
 patch_plt2 + patchwork::plot_layout(heights = c(1,3),
-                                    guides = "collect")
+                                    guides = "collect") +
+    patchwork::plot_annotation(title = "Distribution of Income in City of Engagement", 
+                    theme = theme(plot.title = element_text(hjust = 0.5,
+                                                            size = 18)))
 
 # things to add: annotate the mean/median, add vertical line, change colour and theme
 ```
@@ -324,26 +356,27 @@ We will further plot the Lorenz curve below, which is a more mathematical graphi
 
 ggplot(data = combined, aes(x = Wage)) +
   stat_lorenz(geom = "polygon", alpha = 0.65, fill = "#d3dddc") +
-  geom_abline(linetype = "dashed", linewidth = 1, color = "#456455") +
+  geom_abline(linetype = "dashed", linewidth = 0.8, color = "#456455") +
   coord_fixed() +
   theme_minimal() +
   hrbrthemes::scale_x_percent() +
   hrbrthemes::scale_y_percent() +
   theme(legend.title = element_blank()) +
   labs(x = "Cumulative % of Population",
-       y = "Cumulative % of Income") +
+       y = "Cumulative % of Income",
+       title = "Lorenz Curve for Distribution of Income in\nCity of Engagement ") +
   annotate_ineq(combined$Wage)
 ```
 
 ::: callout-note
 ## Key Observation
 
-In the City of Engagement, the Lorenz curve deviates slightly from the stright diagonal line and the Gini Coefficient is 0.27. As a guideline, a Gini Coefficient value between 0.2 - 0.3 represents relative equality. This shows that overall, there did not seem to be an issue of big income gap. It might however still be worth looking into whether income differs by any particulars groups of demographic profiles.
+In the City of Engagement, the Lorenz curve deviates slightly from the straight diagonal line and the Gini Coefficient is 0.27. As a guideline, a Gini Coefficient value between 0.2 - 0.3 represents relative equality. This shows that overall, there did not seem to be an issue of big income gap. It might however still be worth looking into whether income differs by any particulars groups of demographic profiles.
 :::
 
-### Distribution of Income and Expenses among different Demographic Profiles
+## Distribution of Income and Expenses among different Demographic Profiles
 
-To enable understanding of how Income and the different Expense categories differ by the different Demographic Profiles, an interactive plot would be useful for exploration.
+We now want to drill in further to understand how Income and the different Expense categories differ by the different Demographic Profiles. For such exploration, an interactive plot would be useful.
 
 ::: callout-tip
 ## Interactive Chart
@@ -358,7 +391,7 @@ To enable understanding of how Income and the different Expense categories diffe
 
 # Initiate the base plot
 plot_ly(data = combined,
-        x = ~haveKids,
+        x = ~age_groups,
         y = ~Wage,
         type = 'box',
         boxmean = TRUE,
@@ -366,7 +399,7 @@ plot_ly(data = combined,
 
 # Generate plot, x-axis, and y-axis title
   layout(title = "Boxplot of Income/Expenses vs Selected Demographic Profiles\n(over 12-month period)",
-         xaxis = list(title = "Have Kids"),
+         xaxis = list(title = "Age Groups"),
          yaxis = list(title = "Income"),
          
 # Create dropwdown menus to allow selection of parameters on x-axis and y-axis 
@@ -377,6 +410,10 @@ plot_ly(data = combined,
                                  x = 1,
                                  y = 0,
                                  buttons = list(
+                                   list(method = "update",
+                                        args = list(list(x = list(combined$age_groups)),
+                                                    list(xaxis = list(title = "Age Groups"))),
+                                        label = "Age Groups"),
                                    list(method = "update",
                                         args = list(list(x = list(combined$haveKids)),
                                                     list(xaxis = list(title = "Have Kids"))),
@@ -421,11 +458,183 @@ plot_ly(data = combined,
                                    list(method = "update",
                                         args = list(list(y = list(combined$Education)),
                                                     list(yaxis = list(title = "Education"))),
-                                        label = "Education")
+                                        label = "Education"),
+                                   list(method = "update",
+                                        args = list(list(y = list(combined$NetIncome)),
+                                                    list(yaxis = list(title = "NetIncome"))),
+                                        label = "NetIncome")
                                    )
                                  )
                             )
          )
+```
+
+::: callout-note
+## Key Observations
+
+-   Income seems to differ across residents of different education levels. Particularly, the income of residents with Graduate degree seem to be the highest, followed by residents with Bachelors degree. Income of residents with education level of Low or High School or College seem to be around the same range.
+-   For residents who have kids and have higher household sizes, the expenses that seem to make a difference are education and shelter expenses. Particularly, it is noted that only residents who have kids (and hence household size 3) bear the costs of education expenses. Shelter expenses also seem to be higher for residents who have kids and with bigger household sizes.
+:::
+
+### Statistical Test: Does Income differ by Education Level?
+
+We want to confirm our hypothesis of whether Income differs by Education Level and test the following hypothesis:
+
+> H0: Mean of income is equal across education levels
+>
+> H1: Not all means are equal
+
+We first check the normality of the income distribution by education levels by plotting the Q-Q Plots and performing the Shapiro-Wilk Normality Test. As the p-values from the Normality Test are less than our level of significance of 0.05, we reject the null hypothesis that the distributions are normally distributed.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+
+qq1 <- ggplot(data = combined,
+       aes(sample = Wage, color = educationLevel)) +
+  stat_qq() +
+  stat_qq_line() +
+  scale_color_manual(values = wes_palette("Chevalier1", type = "continuous")) +
+  theme(legend.position="bottom",
+        legend.justification = c("left")) +
+  labs(x = "Theoretical Quantiles",
+       y = "Sample Quantiles",
+       title = "Normal Q-Q Plot")
+
+sw_t1 <- combined %>% 
+  group_by(educationLevel) %>% 
+  shapiro_test(Wage) %>% 
+  select(-variable) %>% 
+  gt() %>% 
+  gt::tab_header(title = "Shapiro-Wilk Normality Test")
+
+tmp1 <- tempfile(fileext = ".png")
+gtsave(sw_t1, tmp1)
+
+table_png1 <- png::readPNG(tmp1, native = TRUE)
+
+qq1 + table_png1
+```
+
+Given that our the distribution is not normal, we will use the non-parametric test that does not assume normality for our hypothesis testing. In this case, we will be performing the Kruskal-Wallis one-way ANOVA test.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+
+ggbetweenstats(
+  data = combined,
+  x = educationLevel,
+  y = Wage,
+  type = "nonparametric",
+  mean.ci = TRUE,
+  pairwise.comparisons = TRUE,
+  pairwise.display = "significant",
+  p.adjust.method = "fdr",
+  messages = FALSE
+)
+```
+
+::: callout-note
+## Key Observations
+
+-   
+:::
+
+### Statistical Test: Does Shelter Expense differ by Household Size?
+
+Next, we want to confirm whether shelter expenses differ by household size and test the following hypothesis.
+
+> H0: Mean of shelter expense is equal across household sizes
+
+> H1: Not all means are equal
+
+Similarly, we will check the normality of the shelter expense distribution by household size by plotting the Q-Q Plots and performing the Shapiro-Wilk Normality Test. As the p-values from the Normality Test are less than our level of significance of 0.05, we reject the null hypothesis that the distributions are normally distributed.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+
+qq2 <- ggplot(data = combined,
+       aes(sample = AdjustedShelter, color = householdSize)) +
+  stat_qq() +
+  stat_qq_line() +
+  scale_color_manual(values = wes_palette("Chevalier1", type = "continuous")) +
+  theme(legend.position="bottom",
+        legend.justification = c("left")) +
+  labs(x = "Theoretical Quantiles",
+       y = "Sample Quantiles",
+       title = "Normal Q-Q Plot")
+
+sw_t2 <- combined %>% 
+  group_by(householdSize) %>% 
+  shapiro_test(AdjustedShelter) %>% 
+  select(-variable) %>% 
+  gt() %>% 
+  gt::tab_header(title = "Shapiro-Wilk Normality Test")
+
+tmp2 <- tempfile(fileext = ".png")
+gtsave(sw_t2, tmp2)
+
+table_png2 <- png::readPNG(tmp2, native = TRUE)
+
+qq2 + table_png2
+```
+
+Given that our the distribution is not normal, we will use the non-parametric test that does not assume normality for our hypothesis testing. In this case, we will be performing the Kruskal-Wallis one-way ANOVA test.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+
+ggbetweenstats(
+  data = combined,
+  x = householdSize,
+  y = AdjustedShelter,
+  type = "nonparametric",
+  mean.ci = TRUE,
+  pairwise.comparisons = TRUE,
+  pairwise.display = "significant",
+  p.adjust.method = "fdr",
+  messages = FALSE
+)
+```
+
+::: callout-note
+## Key Observations
+:::
+
+## Income vs Expenses over time
+
+Last but not least, we also want to understand how the residents' income and expenses have changed over time and whether there is any concern of cost inflation without commensurate increase in wages. We can visualise this through ---
+
+```{r}
+financial_yearmth
+```
+
+```{r}
+combined2 <- participants %>% inner_join(financial_yearmth, by = "participantId")
+combined2$yearmonth <- as.Date(combined2$yearmonth, format='01 %m %Y')
+
+ggplot(data = combined2,
+       aes(x = AdjustedShelter, y = householdSize, fill = after_stat(x))) +
+  
+  geom_density_ridges_gradient(scale = 3, rel_min_height = 0.01) +
+  
+  theme_minimal() +
+    
+  labs(title = 'Resale Prices by Planning Area: {frame_time}') +
+  transition_time(financial_yearmth$yearmonth) +
+  
+  theme(legend.position="none",
+  text = element_text(family = "Garamond"),
+  plot.title = element_text(face = "bold", size = 12),
+  
+  axis.title.x = element_text(size = 10, hjust = 1),
+  axis.title.y = element_text(size = 10, angle = 360),
+  axis.text = element_text(size = 8)) +
+
+  ease_aes('linear')
 ```
 
 # References
