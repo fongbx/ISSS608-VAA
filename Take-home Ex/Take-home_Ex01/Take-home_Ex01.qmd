@@ -360,7 +360,8 @@ ggplot(data = combined, aes(x = Wage)) +
   theme_minimal() +
   hrbrthemes::scale_x_percent() +
   hrbrthemes::scale_y_percent() +
-  theme(legend.title = element_blank()) +
+  theme(legend.title = element_blank(),
+        plot.title = element_text(hjust = 0.5, size = 18)) +
   labs(x = "Cumulative % of Population",
        y = "Cumulative % of Income",
        title = "Lorenz Curve for Distribution of Income in\nCity of Engagement ") +
@@ -400,12 +401,16 @@ plot_ly(data = combined,
         jitter=0.3,
         pointpos=-1.8,
         hoverinfo = "y",
-        fillcolor = "#d3dddc") |> 
+        fillcolor = "#d3dddc",
+        line = list(color = "#456455"),
+        marker = list(size = 2, color = "#456455")) |> 
 
 # Generate plot, x-axis, and y-axis title
   layout(title = "Boxplot of Income/Expenses vs Selected Demographic Profiles\n(over 12-month period)",
          xaxis = list(title = "Age Groups"),
          yaxis = list(title = "Income"),
+         
+  theme(plot.title = element_text(hjust = 0.5, size = 18)),
          
 # Create dropwdown menus to allow selection of parameters on x-axis and y-axis 
          updatemenus = list(list(type = "dropdown",
@@ -622,8 +627,8 @@ Last but not least, we also want to understand how the residents' income and cos
 ```{r}
 #| code-fold: true
 #| code-summary: "Show code"
-#| fig-width: 12
-#| fig-height: 10
+#| fig-width: 6
+#| fig-height: 8
 
 # Extracting Wage and Cost of Living and changing to long format
 wage_col_overtime <- financial_yearmth %>% 
@@ -650,6 +655,10 @@ ggplot(wage_col_overtime, aes(x = Amount, y = yearmonth, group = yearmonth)) +
   labs(title = "Ridgeline Plot of Cost of Living vs Income",
        x = "Amount")
 ```
+
+::: callout-note
+## Key Observations
+:::
 
 # References
 
