@@ -30,7 +30,7 @@ For this exercise, we will be using the following packages:
 We will use `pacman::p_load` to install (if the packages are not yet installed) and load the packages into the R environment in a single command.
 
 ```{r}
-pacman::p_load(tidyverse, lubridate, zoo, ggstatsplot, plotly, crosstalk, gglorenz, DescTools, wesanderson, rstatix, webshot2, png, gt, ggridges, gganimate)
+pacman::p_load(tidyverse, lubridate, zoo, ggstatsplot, plotly, crosstalk, gglorenz, DescTools, wesanderson, rstatix, webshot2, png, gt, ggridges, gganimate, hrbrthemes)
 ```
 
 ## Import Data
@@ -85,7 +85,7 @@ From the ***timestamp*** variable in the **FinancialJournal** dataset, we will a
 
 ```{r}
 # Extract year and month
-financial$yearmonth <- as.yearmon(financial$timestamp)
+financial$yearmonth <- factor(as.yearmon(financial$timestamp))
 ```
 
 ## Remove duplicates in data
@@ -118,8 +118,8 @@ Currently, the financial data is in long format, with **participantId** repeated
 -   Convert the data from long to wide format using `pivot_wider()` to pivot the data frame so that the **categor**y column becomes the names of the new columns, the **amount** column becomes the values in those columns, and the values are summed up for each **participantId** and **yearmonth** combination
 -   Replace all NA values with 0 using `replace(is.na(.), 0)`
 -   Compute a new variable **AdjustedShelter** to offset the Shelter expenses with the RentAdjustments (considered as relief received in relation to Shelter expenses) using `mutate()`
--   Compute a new variable **NetIncome** using all the income less expenses to facilitate analysis of a participant's net income using `mutate()`
 -   Change all expense category (including Education, Food, Recreation and AdjustedShelter) to positive amounts for easier analysis and visualisation using `mutate(across())` the columns and applying the function to multiply with -1
+-   Compute a new variable **CostOfLiving** to facilitate analysis of a participant's total expenses using `mutate()`
 -   Select the final required variables using `select()` and round all the monetary figures to two decimal places
 
 ```{r}
@@ -132,10 +132,10 @@ financial_yearmth <- financial %>%
               values_fn = sum) %>% 
   replace(is.na(.), 0) %>%
   mutate(AdjustedShelter = Shelter + RentAdjustment) %>% 
-  mutate(NetIncome = Wage + Education + Food + Recreation + AdjustedShelter) %>% 
   mutate(across(c(Education, Food, Recreation, AdjustedShelter), function(x) x*-1)) %>%
-  select(participantId, yearmonth, Wage, Education, Food, Recreation, AdjustedShelter, NetIncome) %>%
-  mutate(across(Wage:NetIncome, function(x) round(x, 2)))
+  mutate(CostOfLiving = Education + Food + Recreation + AdjustedShelter) %>% 
+  select(participantId, yearmonth, Wage, Education, Food, Recreation, AdjustedShelter, CostOfLiving) %>%
+  mutate(across(Wage:CostOfLiving, function(x) round(x, 2)))
 ```
 
 Below is a glimpse of how the aggregated data looks like:
@@ -180,8 +180,8 @@ financial_agg <- financial_yearmth %>%
   ungroup() %>%
   select(-yearmonth) %>%
   group_by(participantId) %>%
-  summarise(across(Wage:NetIncome, sum)) %>%
-  mutate(across(Wage:NetIncome, function(x) round(x, 2)))
+  summarise(across(Wage:CostOfLiving, sum)) %>%
+  mutate(across(Wage:CostOfLiving, function(x) round(x, 2)))
 ```
 
 Below is a glimpse of how the aggregated data looks like:
@@ -373,7 +373,7 @@ ggplot(data = combined, aes(x = Wage)) +
 In the City of Engagement, the Lorenz curve deviates slightly from the straight diagonal line and the Gini Coefficient is 0.27. As a guideline, a Gini Coefficient value between 0.2 - 0.3 represents relative equality. This shows that overall, there did not seem to be an issue of big income gap. It might however still be worth looking into whether income differs by any particulars groups of demographic profiles.
 :::
 
-## Distribution of Income and Expenses among different Demographic Profiles
+## Distribution of Income and Expense Categories among different Demographic Profiles
 
 We now want to drill in further to understand how income and the different expense categories differ by the different demographic profiles. For such exploration, an interactive plot would be useful.
 
@@ -387,13 +387,19 @@ We now want to drill in further to understand how income and the different expen
 ```{r}
 #| code-fold: true
 #| code-summary: "Show code"
+#| fig-width: 12
+#| fig-height: 10
 
 # Initiate the base plot
 plot_ly(data = combined,
         x = ~age_groups,
         y = ~Wage,
         type = 'box',
-        boxmean = TRUE,
+        boxmean = 'sd',
+        boxpoints = 'all',
+        jitter=0.3,
+        pointpos=-1.8,
+        hoverinfo = "y",
         fillcolor = "#d3dddc") |> 
 
 # Generate plot, x-axis, and y-axis title
@@ -459,9 +465,9 @@ plot_ly(data = combined,
                                                     list(yaxis = list(title = "Education"))),
                                         label = "Education"),
                                    list(method = "update",
-                                        args = list(list(y = list(combined$NetIncome)),
-                                                    list(yaxis = list(title = "NetIncome"))),
-                                        label = "NetIncome")
+                                        args = list(list(y = list(combined$CostOfLiving)),
+                                                    list(yaxis = list(title = "Cost of Living"))),
+                                        label = "Cost of Living")
                                    )
                                  )
                             )
@@ -609,9 +615,41 @@ As the p-value from the Kruskal-Wallis one-way ANOVA test is less than our level
 Together with the earlier observation from the interactive boxplots that only residents who have kids (and hence household size 3) bear the costs of education expenses, the city managers may consider more reliefs on education and shelter expenses for families who have kids and bigger household sizes. This is especially considering that only about 28% of the population have kids and such reliefs could help to reduce some of the expense burden for families who wish to have kids.
 :::
 
-## Income vs Expenses over time
+## Income vs Cost of Living over time
 
-Last but not least, we also want to understand how the residents' income and expenses have changed over time and whether there is any concern of cost inflation without commensurate increase in wages. We can visualise this through ---
+Last but not least, we also want to understand how the residents' income and cost of living, which is defined as the sum of all expenses including Shelter, Education, Food and Recreation, have changed over time. This is to find out whether there is any concern of cost inflation without commensurate increase in income. We can visualise this through the ridgeline plot below.
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show code"
+#| fig-width: 12
+#| fig-height: 10
+
+# Extracting Wage and Cost of Living and changing to long format
+wage_col_overtime <- financial_yearmth %>% 
+  dplyr::select(participantId, yearmonth, Wage, CostOfLiving) %>%
+  pivot_longer(cols = c("Wage", "CostOfLiving"),
+               names_to = "Category",
+               values_to = "Amount")
+
+# Plotting ridgeline plot
+ggplot(wage_col_overtime, aes(x = Amount, y = yearmonth, group = yearmonth)) +
+  geom_density_ridges(data = filter(wage_col_overtime, Category == "Wage"),
+                      fill = "#71a187",
+                      alpha = 0.7) +
+  geom_density_ridges(data = filter(wage_col_overtime, Category == "CostOfLiving"),
+                      fill = "#ef2400",
+                      alpha = 0.7) +
+  theme_ridges() +
+  theme(
+    legend.position="none",
+    axis.title.y = element_blank()
+  ) +
+  scale_x_continuous(expand = c(0, 0)) +
+  scale_y_discrete(name = NULL, expand = expansion(add = c(0.2, 2.6))) +
+  labs(title = "Ridgeline Plot of Cost of Living vs Income",
+       x = "Amount")
+```
 
 # References
 
@@ -619,3 +657,5 @@ Last but not least, we also want to understand how the residents' income and exp
 -   [Lorenz Curve](https://www.investopedia.com/terms/l/lorenz-curve.asp#:~:text=The%20Lorenz%20curve%20is%20a%20graphical%20representation%20of%20the%20distribution,higher%20the%20level%20of%20inequality)
 -   [Visual Analytics of Resale Prices of Singapore Public Housing Properties](https://isss608-michaeldj.netlify.app/take-home_ex/take-home_ex03/take-home_ex03)
 -   [Documentation for Boxplots in Plotly](https://plotly.com/r/reference/#box)
+
+1
