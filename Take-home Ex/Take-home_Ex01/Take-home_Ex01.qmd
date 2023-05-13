@@ -627,7 +627,7 @@ Last but not least, we also want to understand how the residents' income and cos
 ```{r}
 #| code-fold: true
 #| code-summary: "Show code"
-#| fig-width: 6
+#| fig-width: 10
 #| fig-height: 8
 
 # Extracting Wage and Cost of Living and changing to long format
@@ -638,7 +638,7 @@ wage_col_overtime <- financial_yearmth %>%
                values_to = "Amount")
 
 # Plotting ridgeline plot
-ggplot(wage_col_overtime, aes(x = Amount, y = yearmonth, group = yearmonth)) +
+ggplot(wage_col_overtime, aes(x = Amount, y = yearmonth)) +
   geom_density_ridges(data = filter(wage_col_overtime, Category == "Wage"),
                       fill = "#71a187",
                       alpha = 0.7) +
@@ -656,6 +656,21 @@ ggplot(wage_col_overtime, aes(x = Amount, y = yearmonth, group = yearmonth)) +
        x = "Amount")
 ```
 
+```{r}
+#| fig-width: 10
+#| fig-height: 8
+
+test <- financial_yearmth %>% 
+  select(-CostOfLiving) %>% 
+  pivot_longer(cols = c("Wage", "Education", "Food", "Recreation", "AdjustedShelter"),
+               names_to = "Category",
+               values_to = "Amount")
+
+ggplot(test, aes(x = Amount, y = yearmonth, fill = Category)) +
+  geom_density_ridges(alpha = 0.7)
+  theme_ridges()
+```
+
 ::: callout-note
 ## Key Observations
 :::
@@ -663,8 +678,9 @@ ggplot(wage_col_overtime, aes(x = Amount, y = yearmonth, group = yearmonth)) +
 # References
 
 -   [gglorenz package](https://github.com/jjchern/gglorenz)
--   [Lorenz Curve](https://www.investopedia.com/terms/l/lorenz-curve.asp#:~:text=The%20Lorenz%20curve%20is%20a%20graphical%20representation%20of%20the%20distribution,higher%20the%20level%20of%20inequality)
--   [Visual Analytics of Resale Prices of Singapore Public Housing Properties](https://isss608-michaeldj.netlify.app/take-home_ex/take-home_ex03/take-home_ex03)
--   [Documentation for Boxplots in Plotly](https://plotly.com/r/reference/#box)
 
-1
+-   [Lorenz Curve](https://www.investopedia.com/terms/l/lorenz-curve.asp#:~:text=The%20Lorenz%20curve%20is%20a%20graphical%20representation%20of%20the%20distribution,higher%20the%20level%20of%20inequality)
+
+-   [Visual Analytics of Resale Prices of Singapore Public Housing Properties](https://isss608-michaeldj.netlify.app/take-home_ex/take-home_ex03/take-home_ex03)
+
+-   [Documentation for Boxplots in Plotly](https://plotly.com/r/reference/#box)
