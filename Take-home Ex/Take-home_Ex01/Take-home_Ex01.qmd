@@ -172,7 +172,7 @@ financial_yearmth <- financial_yearmth %>%
   filter(!participantId %in% participants_withdrawn)
 ```
 
-## **Aggregating financial data per participant**
+## Aggregating financial data per participant
 
 While aggregating financial data per participant per yearmonth allow us to observe the financial status of each participant over the months, we will also further aggregate the financial data per participant taking his/her total income or expenses across the entire study period (12 months).
 
